@@ -1,18 +1,11 @@
 """
 Comfort serial communications.
-
-Initial version for testing access to the Comfort RS485 interface
-through the Raspberry Pi UART.
-
-Author: Pat Rooney
 """
 
-from datetime import datetime
 import serial
 
 
 class ComfortConnection:
-    """Handles connection to the Comfort serial interface."""
 
     def __init__(
         self,
@@ -26,7 +19,6 @@ class ComfortConnection:
         self.serial = None
 
     def connect(self):
-        """Open the serial port."""
 
         self.serial = serial.Serial(
             port=self.port,
@@ -36,20 +28,34 @@ class ComfortConnection:
 
         print(f"Connected to {self.port}")
 
-    def read_loop(self):
-        """Read data from the serial port indefinitely."""
+    def read_message(self):
 
-        print("Waiting for data...\n")
+        buffer = bytearray()
 
         while True:
-            data = self.serial.read(self.serial.in_waiting or 1)
 
-            if data:
-                timestamp = datetime.now().strftime(
-                    "%Y-%m-%d %H:%M:%S.%f"
-                )[:-3]
+            data = self.serial.read(1)
 
-                print(
-                    f"{timestamp} RX: "
-                    f"{data.hex(' ').upper()}"
-                )
+            if not data:
+                continue
+
+            if data == b"\r":
+
+                try:
+
+                    text = buffer.decode(
+                        "ascii",
+                        errors="ignore"
+                    )
+
+                    text = text.replace("\x03", "")
+                    text = text.strip()
+
+                    if text:
+                        return text
+
+                finally:
+                    buffer.clear()
+
+            else:
+                buffer.extend(data)
