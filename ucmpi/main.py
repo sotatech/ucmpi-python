@@ -1,11 +1,13 @@
 from comfort import ComfortConnection
 from protocol import ComfortProtocol
+from state import SystemState
 
 
 def main():
 
     comfort = ComfortConnection()
     protocol = ComfortProtocol()
+    state = SystemState()
 
     comfort.connect()
 
@@ -18,12 +20,22 @@ def main():
         if not message:
             continue
 
-        print(f"RAW -> {message}")
-
         event = protocol.parse(message)
 
-        if event is not None:
+        if event:
+
             print(event)
+
+            state.update(event)
+
+            state.dump()
+
+        else:
+
+            print(
+                f"Unhandled message: "
+                f"{message}"
+            )
 
 
 if __name__ == "__main__":
