@@ -1,13 +1,15 @@
 from comfort import ComfortConnection
 from protocol import ComfortProtocol
-from state import SystemState
+from mqtt import MQTTPublisher
+
+from models import ZoneEvent
 
 
 def main():
 
     comfort = ComfortConnection()
     protocol = ComfortProtocol()
-    state = SystemState()
+    mqtt = MQTTPublisher()
 
     comfort.connect()
 
@@ -26,9 +28,12 @@ def main():
 
             print(event)
 
-            state.update(event)
+            if isinstance(event, ZoneEvent):
 
-            state.dump()
+                mqtt.publish_zone(
+                    event.zone,
+                    event.state
+                )
 
         else:
 
