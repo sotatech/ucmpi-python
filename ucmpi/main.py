@@ -2,7 +2,10 @@ from comfort import ComfortConnection
 from protocol import ComfortProtocol
 from mqtt import MQTTPublisher
 
-from models import ZoneEvent
+from models import (
+    ZoneEvent,
+    ModeChangeEvent
+)
 
 from state import SystemState
 
@@ -26,6 +29,8 @@ def main():
     mqtt = MQTTPublisher()
 
     state = SystemState()
+    
+    previous_alarm_status = None
 
     config = ComfortConfiguration()
 
@@ -35,12 +40,23 @@ def main():
     )
 
     config.load_xml(str(config_file))
+    print("Zone 18:", config.get_zone_name(18))
+    print("Zone 19:", config.get_zone_name(19))
+    print("Zone 31:", config.get_zone_name(31))
+    print("Zone 39:", config.get_zone_name(39))
+    print("Output 1:", config.get_output_name(1))
+    print("Flag 1:", config.get_flag_name(1))
+    print("Counter 1:", config.get_counter_name(1))
+    print("Sensor 1:", config.get_sensor_name(1))
+
+
 
     ha = HomeAssistantDiscovery(
         mqtt
     )
 
     ha.publish_alarm_discovery()
+    ha.publish_alarm_mode_sensor()
 
     comfort.connect()
 
@@ -66,6 +82,7 @@ def main():
         # Update system state
         #
         state.update(event)
+        from models import ModeChangeEvent
 
         #
         # Display events
@@ -93,19 +110,36 @@ def main():
         #
         # Publish Home Assistant alarm state
         #
+        
         alarm_status = (
             state.get_alarm_status()
         )
 
-        print(
-            f"Alarm Status: "
-            f"{alarm_status}"
+        if alarm_status != previous_alarm_status:
+
+            print(
+                f"Alarm Status: "
+                f"{alarm_status}"
         )
 
         ha.publish_alarm_state(
             alarm_status
         )
 
+        previous_alarm_status = (
+            alarm_status
+        )
+        
+        #
+        # Publish alarm mode
+        #
+        if isinstance(event, ModeChangeEvent):
+
+            mqtt.client.publish(
+                "comfort/alarm/mode",
+                event.mode,
+                retain=True
+            )
 
 if __name__ == "__main__":
     main()

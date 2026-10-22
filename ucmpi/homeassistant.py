@@ -7,6 +7,20 @@ import json
 
 class HomeAssistantDiscovery:
 
+    def system_device(self):
+
+        return {
+            "identifiers": [
+                "comfort_alarm_system"
+            ],
+            "name":
+                "Cytech Comfort Alarm System",
+            "manufacturer":
+                "Cytech",
+            "model":
+                "Comfort"
+        }
+
     def __init__(self, mqtt_client):
 
         self.mqtt = mqtt_client
@@ -27,7 +41,9 @@ class HomeAssistantDiscovery:
             "unique_id": "comfort_alarm",
             "state_topic":
                 "comfort/alarm/state",
-            "icon": "mdi:shield-home"
+            "icon": "mdi:shield-home",
+            "device":
+                self.system_device()
         }
 
         self.mqtt.client.publish(
@@ -39,6 +55,32 @@ class HomeAssistantDiscovery:
         print(
             "HA Discovery -> "
             "Comfort Alarm"
+        )
+
+    def publish_alarm_mode_sensor(self):
+
+        topic = (
+            "homeassistant/"
+            "sensor/"
+            "comfort_alarm_mode/"
+            "config"
+        )
+
+        payload = {
+            "name":
+                "Comfort Alarm Mode",
+            "unique_id":
+                "comfort_alarm_mode",
+            "state_topic":
+                "comfort/alarm/mode",
+            "device":
+                self.system_device()
+        }
+
+        self.mqtt.client.publish(
+            topic,
+            json.dumps(payload),
+            retain=True
         )
 
     def publish_alarm_state(
