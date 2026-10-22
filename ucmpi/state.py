@@ -6,7 +6,9 @@ from models import (
     ZoneEvent,
     ModeChangeEvent,
     AlarmModeEvent,
-    PanelStatusEvent
+    PanelStatusEvent,
+    ArmingEvent,
+    DelayEvent
 )
 
 
@@ -23,54 +25,67 @@ class SystemState:
 
         self.panel_status = 0
 
+        self.alarm_status = "off"
+
     def update(self, event):
 
+        #
+        # Zone state
+        #
         if isinstance(event, ZoneEvent):
 
             self.zones[event.zone] = event.state
 
+        #
+        # Panel mode changes
+        #
         elif isinstance(event, ModeChangeEvent):
 
             self.mode = event.mode
 
+            if event.mode in (
+                "off",
+                "away",
+                "night",
+                "day",
+                "vacation"
+            ):
+                self.alarm_status = event.mode
+
+        #
+        # Alarm mode changes
+        #
         elif isinstance(event, AlarmModeEvent):
 
             self.alarm_mode = event.mode
 
+        #
+        # Panel status
+        #
         elif isinstance(event, PanelStatusEvent):
 
             self.panel_status = event.status
 
-    def dump(self):
+        #
+        # Arming state
+        #
+        elif isinstance(event, ArmingEvent):
 
-        print("\n----- SYSTEM STATE -----")
+            if event.ready:
+                self.alarm_status = "arming"
+            else:
+                self.alarm_status = "arming waiting on zone"
 
-        print(f"Mode: {self.mode}")
+        #
+        # Entry / Exit delay
+        #
+        elif isinstance(event, DelayEvent):
 
-        print(f"Alarm Mode: {self.alarm_mode}")
+            if event.delay_type == "entry":
+                self.alarm_status = "entry delay"
+            else:
+                self.alarm_status = "exit delay"
 
-        print(f"Panel Status: {self.panel_status}")
+    def get_alarm_status(self):
 
-        print("Active Zones:")
-
-        active = [
-            zone
-            for zone, state
-            in self.zones.items()
-            if state
-        ]
-
-        if active:
-
-            print(
-                ", ".join(
-                    str(zone)
-                    for zone in sorted(active)
-                )
-            )
-
-        else:
-
-            print("None")
-
-        print("------------------------\n")
+        return self.alarm_status
