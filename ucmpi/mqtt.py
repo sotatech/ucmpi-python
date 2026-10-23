@@ -12,13 +12,18 @@ class MQTTPublisher:
 
     def __init__(
         self,
-        broker="localhost",
+        broker="192.168.16.101",
         port=1883
     ):
 
         print("Starting MQTT...")
 
         self.client = mqtt.Client()
+        
+        self.client.username_pw_set(
+            username="mqtt",
+            password="1991Dalton"
+        )
 
         print("Connecting to broker...")
 

@@ -4,7 +4,8 @@ from mqtt import MQTTPublisher
 
 from models import (
     ZoneEvent,
-    ModeChangeEvent
+    ModeChangeEvent,
+    LoginEvent
 )
 
 from state import SystemState
@@ -33,6 +34,8 @@ def main():
     previous_alarm_status = None
 
     config = ComfortConfiguration()
+    
+    login_complete = False
 
     config_file = (
         Path(__file__).resolve().parent
@@ -56,9 +59,36 @@ def main():
     )
 
     ha.publish_alarm_discovery()
+
     ha.publish_alarm_mode_sensor()
 
+    #
+    #
+    # Publish Zone Discovery
+    #
+    for zone_number, zone_name in (
+        config.zones.items()
+    ):
+
+        # Skip unused zones
+        if zone_name.startswith("Zone"):
+            continue
+
+        ha.publish_zone_discovery(
+            zone_number,
+            zone_name
+        )
+        
+    #
+    # Connect once
+    #
     comfort.connect()
+    comfort.login("1991")
+
+    #
+    # Startup synchronization test
+    #
+    # comfort.send_command("M?")
 
     print("Waiting for Comfort messages...\n")
 
@@ -71,6 +101,22 @@ def main():
 
         event = protocol.parse(message)
 
+        if message.startswith("LU"):
+
+            print(
+                f"Comfort Login -> {message}"
+            )
+
+            login_complete = True
+
+        if login_complete:
+
+            login_complete = False
+
+            print("LOGIN COMPLETE")
+
+            comfort.send_command("M?")
+
         if not event:
             print(
                 f"Unhandled message: "
@@ -81,12 +127,15 @@ def main():
         #
         # Update system state
         #
+        
         state.update(event)
+        
         from models import ModeChangeEvent
 
         #
         # Display events
         #
+        
         if isinstance(event, ZoneEvent):
 
             zone_name = config.get_zone_name(
@@ -99,6 +148,11 @@ def main():
             )
 
             mqtt.publish_zone(
+                event.zone,
+                event.state
+            )
+
+            ha.publish_zone_state(
                 event.zone,
                 event.state
             )

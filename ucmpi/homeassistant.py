@@ -6,6 +6,97 @@ import json
 
 
 class HomeAssistantDiscovery:
+    
+    def zones_device(self):
+
+        return {
+            "identifiers": [
+                "comfort_alarm_zones"
+            ],
+            "name":
+                "Cytech Comfort Alarm Zones",
+            "manufacturer":
+                "Cytech",
+            "model":
+                "Comfort"
+        }
+    
+    def publish_zone_discovery(
+        self,
+        zone_number,
+        zone_name
+    ):
+
+        entity_name = (
+            zone_name
+            .lower()
+            .replace(" ", "_")
+        )
+
+        topic = (
+            "homeassistant/"
+            "binary_sensor/"
+            f"comfort_zone_{zone_number}/"
+            "config"
+        )
+
+        payload = {
+            "name": zone_name,
+
+            "unique_id":
+                f"comfort_zone_{zone_number}",
+
+            "state_topic":
+                (
+                    "comfort/zone/"
+                    f"{zone_number}/state"
+                ),
+
+            "payload_on": "ON",
+
+            "payload_off": "OFF",
+
+            "device_class": "opening",
+
+            "device":
+                self.zones_device()
+        }
+
+        self.mqtt.client.publish(
+            topic,
+            json.dumps(payload),
+            retain=True
+        )
+
+        print(
+            f"HA Zone Discovery -> "
+            f"{zone_name}"
+    )
+        
+    def publish_zone_state(
+        self,
+        zone_number,
+        zone_state
+    ):
+
+        topic = (
+            f"comfort/zone/"
+            f"{zone_number}/state"
+        )
+
+        payload = (
+            "ON"
+            if zone_state
+            else "OFF"
+        )
+
+        self.mqtt.client.publish(
+            topic,
+            payload,
+            retain=True
+        )
+        
+        
 
     def system_device(self):
 

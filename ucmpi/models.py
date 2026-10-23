@@ -4,6 +4,9 @@ UCMPI data models.
 
 from dataclasses import dataclass
 
+@dataclass
+class LoginEvent:
+    user: int
 
 @dataclass
 class ZoneEvent:

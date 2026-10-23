@@ -10,6 +10,7 @@ from models import (
     AlarmModeEvent,
     PanelStatusEvent,
     DateTimeEvent,
+    LoginEvent,
     AlarmEvent
 )
 
@@ -28,12 +29,26 @@ class ComfortProtocol:
     def parse(self, message: str):
 
         #
+        # Login response
+        #
+        if message.startswith("LU"):
+
+            user = int(message[2:])
+
+            return LoginEvent(
+                user=user
+            )
+
+        #
         # Input Point (Zone)
         #
-        if message.startswith("IP"):
+        elif message.startswith("IP"):
 
             zone = int(message[2:4], 16)
-            state = message[4:6] == "01"
+
+            state = (
+                message[4:6] == "01"
+            )
 
             return ZoneEvent(
                 zone=zone,
@@ -45,7 +60,10 @@ class ComfortProtocol:
         #
         elif message.startswith("ER"):
 
-            zone = int(message[2:4], 16)
+            zone = int(
+                message[2:4],
+                16
+            )
 
             return ArmingEvent(
                 zone=zone,
@@ -53,7 +71,7 @@ class ComfortProtocol:
             )
 
         #
-        # Entry/Exit Delay
+        # Entry / Exit Delay
         #
         elif message.startswith("EX"):
 
@@ -108,46 +126,4 @@ class ComfortProtocol:
                 16
             )
 
-            user = int(
-                message[4:6],
-                16
-            )
-
-            return AlarmModeEvent(
-                mode=mode,
-                user=user
-            )
-
-        #
-        # Panel Status
-        #
-        elif message.startswith("PS"):
-
-            status = int(
-                message[2:4],
-                16
-            )
-
-            return PanelStatusEvent(
-                status=status
-            )
-
-        #
-        # Date / Time
-        #
-        elif message.startswith("DT"):
-
-            return DateTimeEvent(
-                timestamp=message[2:]
-            )
-
-        #
-        # Alarm Event
-        #
-        elif message.startswith("AL"):
-
-            return AlarmEvent(
-                code=message[2:]
-            )
-
-        return None
+        
