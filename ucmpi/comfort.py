@@ -89,6 +89,10 @@ class ComfortConnection:
                     text = text.strip()
 
                     if text:
+                        print(
+                            "RAW RX:",
+                            buffer.hex(" ").upper()
+                        )  
                         return text
 
                 finally:

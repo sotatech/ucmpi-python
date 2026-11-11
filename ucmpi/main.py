@@ -115,7 +115,10 @@ def main():
 
             print("LOGIN COMPLETE")
 
-            comfort.send_command("M?")
+            comfort.send_command("u?00")
+            comfort.send_command("U?")
+            comfort.send_command("V?")
+            comfort.send_command("v?")
 
         if not event:
             print(
@@ -129,8 +132,6 @@ def main():
         #
         
         state.update(event)
-        
-        from models import ModeChangeEvent
 
         #
         # Display events

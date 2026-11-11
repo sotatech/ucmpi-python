@@ -20,7 +20,73 @@ class HomeAssistantDiscovery:
             "model":
                 "Comfort"
         }
-    
+ 
+
+    def get_zone_device_class(
+        self,
+        zone_name
+    ):
+
+        name = zone_name.lower()
+
+        #
+        # Motion detectors
+        #
+        if "pir" in name:
+            return "motion"
+
+        if name.endswith("ir"):
+            return "motion"
+
+        #
+        # Smoke detectors
+        #
+        if "smoke" in name:
+            return "smoke"
+
+        #
+        # Heat detectors
+        #
+        if "heat" in name:
+            return "heat"
+
+        #
+        # Vibration sensors
+        #
+        if "vib" in name:
+            return "vibration"
+
+        #
+        # Doors
+        #
+        if "door" in name:
+            return "door"
+
+        if "gate" in name:
+            return "door"
+
+        #
+        # Locks
+        #
+        if "lock" in name:
+            return "lock"
+
+        #
+        # Windows
+        #
+        if "window" in name:
+            return "window"
+
+        #
+        # Your abbreviated style:
+        # Wind = Window
+        #
+        if "wind" in name:
+            return "window"
+
+        return "opening"
+
+ 
     def publish_zone_discovery(
         self,
         zone_number,
@@ -56,7 +122,10 @@ class HomeAssistantDiscovery:
 
             "payload_off": "OFF",
 
-            "device_class": "opening",
+            "device_class":
+                self.get_zone_device_class(
+                    zone_name
+                ),
 
             "device":
                 self.zones_device()
