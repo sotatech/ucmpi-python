@@ -7,6 +7,43 @@ import serial
 
 class ComfortConnection:
 
+    def login(
+        self,
+        user_code="1234"
+    ):
+
+        login_command = (
+            "\x03"
+            + "LI"
+            + user_code
+            + "\r"
+        )
+
+        self.serial.write(
+            login_command.encode()
+        )
+
+        print(
+            f"TX -> LI{user_code}"
+        )
+
+
+    def send_command(self, command):
+
+        command_bytes = (
+            command + "\r"
+        ).encode()
+
+        self.serial.write(command_bytes)
+
+        print(
+            f"TX -> {command} "
+            f"({command_bytes.hex(' ').upper()})"
+        )
+        print(
+            f"TX -> {command}"
+        )
+
     def __init__(
         self,
         port="/dev/serial0",
