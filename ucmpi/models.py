@@ -51,3 +51,8 @@ class DateTimeEvent:
 @dataclass
 class AlarmEvent:
     code: str
+    
+@dataclass
+class ZoneStateDumpEvent:
+    bitmap: str
+    

@@ -11,7 +11,8 @@ from models import (
     PanelStatusEvent,
     DateTimeEvent,
     LoginEvent,
-    AlarmEvent
+    AlarmEvent,
+    ZoneStateDumpEvent
 )
 
 
@@ -37,6 +38,15 @@ class ComfortProtocol:
 
             return LoginEvent(
                 user=user
+            )
+
+#
+# Zone State Dump
+#
+        elif message.startswith("Z?"):
+
+            return ZoneStateDumpEvent(
+                bitmap=message[2:]
             )
 
         #

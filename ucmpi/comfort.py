@@ -31,17 +31,16 @@ class ComfortConnection:
     def send_command(self, command):
 
         command_bytes = (
-            command + "\r"
-        ).encode()
+            b"\x03"
+            + command.encode()
+            + b"\r"
+        )
 
         self.serial.write(command_bytes)
 
         print(
             f"TX -> {command} "
             f"({command_bytes.hex(' ').upper()})"
-        )
-        print(
-            f"TX -> {command}"
         )
 
     def __init__(
@@ -91,8 +90,13 @@ class ComfortConnection:
                     if text:
                         print(
                             "RAW RX:",
-                            buffer.hex(" ").upper()
-                        )  
+                            buffer.hex(" ").upper(),
+                            "TEXT:",
+                            buffer.decode(
+                                "ascii",
+                                errors="ignore"
+                            )
+                        )
                         return text
 
                 finally:

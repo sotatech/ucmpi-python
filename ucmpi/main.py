@@ -5,7 +5,8 @@ from mqtt import MQTTPublisher
 from models import (
     ZoneEvent,
     ModeChangeEvent,
-    LoginEvent
+    LoginEvent,
+    ZoneStateDumpEvent
 )
 
 from state import SystemState
@@ -119,6 +120,14 @@ def main():
             comfort.send_command("U?")
             comfort.send_command("V?")
             comfort.send_command("v?")
+            comfort.send_command("a?")
+            comfort.send_command("b?00")
+            comfort.send_command("f?00")
+            comfort.send_command("M?")
+            comfort.send_command("Y?")
+            comfort.send_command("Z?")
+            comfort.send_command("y?")
+            comfort.send_command("z?")
 
         if not event:
             print(
@@ -136,6 +145,66 @@ def main():
         #
         # Display events
         #
+
+        if isinstance(event, ZoneStateDumpEvent):
+
+            print(
+                "ZONE BITMAP:",
+                event.bitmap
+            )
+
+            bitmap = bytes.fromhex(
+                event.bitmap
+            )
+
+            #
+            # Decode current state of every configured zone
+            #
+            for zone_number, zone_name in (
+                config.zones.items()
+            ):
+
+                # Skip unused zones
+                if zone_name.startswith("Zone"):
+                    continue
+
+                byte_index = (
+                    zone_number - 1
+                ) // 8
+
+                bit_index = (
+                    zone_number - 1
+                ) % 8
+
+                #
+                # Ignore zones outside bitmap range
+                #
+                if byte_index >= len(bitmap):
+                    continue
+
+                zone_state = bool(
+                    bitmap[byte_index]
+                    & (1 << bit_index)
+                )
+
+                print(
+                    f"STARTUP: "
+                    f"{zone_name} -> "
+                    f"{'ON' if zone_state else 'OFF'}"
+                )
+
+                mqtt.publish_zone(
+                    zone_number,
+                    zone_state
+                )
+
+                ha.publish_zone_state(
+                    zone_number,
+                    zone_state
+                )
+
+            continue
+
         
         if isinstance(event, ZoneEvent):
 
